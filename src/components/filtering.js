@@ -26,7 +26,17 @@ export function initFiltering(elements, indexes) {
             }
         }
 
+        // Преобразуем totalFrom и totalTo в массив для range-фильтрации
+        const filterState = { ...state };
+        if (filterState.totalFrom || filterState.totalTo) {
+            const from = filterState.totalFrom ? parseFloat(filterState.totalFrom) : null;
+            const to = filterState.totalTo ? parseFloat(filterState.totalTo) : null;
+            filterState.total = [from, to];
+            delete filterState.totalFrom;
+            delete filterState.totalTo;
+        }
+
         // @todo: #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compare(row, state));
+        return data.filter(row => compare(row, filterState));
     }
 }

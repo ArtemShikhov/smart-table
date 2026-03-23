@@ -61,11 +61,13 @@ const rules = {
         if (Array.isArray(targetValue)) {
             if (targetValue.length === 2) {
                 const [from, to] = targetValue;
+                // Преобразуем sourceValue в число для корректного сравнения
+                const numericSource = typeof sourceValue === 'string' ? parseFloat(sourceValue) : sourceValue;
 
-                if (!isEmpty(from) && sourceValue < from) {
+                if (!isEmpty(from) && numericSource < from) {
                     return { result: false };
                 }
-                if (!isEmpty(to) && sourceValue > to) {
+                if (!isEmpty(to) && numericSource > to) {
                     return { result: false };
                 }
                 return { result: true };

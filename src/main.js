@@ -40,16 +40,17 @@ function collectState() {
  */
 async function render(action) {
     let state = collectState(); // состояние полей из таблицы
-    let query = {};
+    let query = {}; // здесь будут формироваться параметры запроса
     // @todo: использование
     // query = applySearching(query, state, action);
     // query = applyFiltering(query, state, action);
     // query = applySorting(query, state, action);
-    // query = applyPagination(query, state, action);
+    query = applyPagination(query, state, action); // обновляем query
 
-    const { total, items } = await api.getRecords(query);
+    const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
 
-    sampleTable.render(items)
+    updatePagination(total, query); // перерисовываем пагинатор
+    sampleTable.render(items);
 }
 
 const sampleTable = initTable({
@@ -60,7 +61,7 @@ const sampleTable = initTable({
 }, render);
 
 // @todo: инициализация
-const applyPagination = initPagination(
+const {applyPagination, updatePagination} = initPagination(
     sampleTable.pagination.elements,
     (el, page, isCurrent) => {
         const input = el.querySelector('input');

@@ -50,10 +50,14 @@ async function render(action) {
     try {
         const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
 
-        updatePagination(total, query); // перерисовываем пагинатор
-        sampleTable.render(items);
+        if (items && items.length >= 0) {
+            updatePagination(total, query); // перерисовываем пагинатор
+            sampleTable.render(items);
+        }
     } catch (e) {
         console.error('Error rendering table:', e);
+        // Даже при ошибчке показываем пустую таблицу
+        sampleTable.render([]);
     }
 }
 

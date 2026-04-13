@@ -57,6 +57,11 @@ export function initData(sourceData) {
 
         try {
             const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const records = await response.json();
 
             lastQuery = nextQuery;
@@ -65,11 +70,12 @@ export function initData(sourceData) {
                 items: mapRecords(records.items)
             };
         } catch (e) {
+            console.warn('Using local data fallback:', e.message);
             // fallback на локальные данные с учётом пагинации
-            const limit = parseInt(query.limit) || data.length;
+            const limit = parseInt(query.limit) || 10;
             const page = parseInt(query.page) || 1;
             const skip = (page - 1) * limit;
-            
+
             lastResult = {
                 total: data.length,
                 items: data.slice(skip, skip + limit)

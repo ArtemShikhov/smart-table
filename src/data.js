@@ -65,10 +65,14 @@ export function initData(sourceData) {
                 items: mapRecords(records.items)
             };
         } catch (e) {
-            // fallback на локальные данные
+            // fallback на локальные данные с учётом пагинации
+            const limit = parseInt(query.limit) || data.length;
+            const page = parseInt(query.page) || 1;
+            const skip = (page - 1) * limit;
+            
             lastResult = {
                 total: data.length,
-                items: data
+                items: data.slice(skip, skip + limit)
             };
         }
 

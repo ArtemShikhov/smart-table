@@ -24,8 +24,8 @@ const api = initData(sourceData);
 function collectState() {
     const state = processFormData(new FormData(sampleTable.container));
 
-    const rowsPerPage = parseInt(state.rowsPerPage);
-    const page = parseInt(state.page ?? 1);
+    const rowsPerPage = parseInt(state.rowsPerPage) || 10;
+    const page = parseInt(state.page) || 1;
 
     return {
         ...state,
@@ -91,11 +91,15 @@ const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
 async function init() {
-    const indexes = await api.getIndexes();
+    try {
+        const indexes = await api.getIndexes();
 
-    updateIndexes(sampleTable.filter.elements, {
-        searchBySeller: indexes.sellers
-    });
+        updateIndexes(sampleTable.filter.elements, {
+            searchBySeller: indexes.sellers
+        });
+    } catch (e) {
+        console.error('Error initializing indexes:', e);
+    }
 }
 
-init().then(render);
+init().then(render).catch(render);

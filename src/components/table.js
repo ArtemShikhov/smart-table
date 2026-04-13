@@ -55,6 +55,10 @@ export function initTable(settings, onAction) {
         
         if (root.elements.rows) {
             root.elements.rows.replaceChildren(...nextRows);
+            console.log('Rows rendered:', nextRows.length);
+        } else {
+            console.error('rows element not found in table template!');
+            console.log('Available elements:', Object.keys(root.elements));
         }
     }
 

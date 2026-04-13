@@ -55,6 +55,11 @@ export function initData(sourceData) {
             return lastResult;
         }
 
+        // Убедимся что кэши инициализированы
+        if (!sellersCache || !customersCache) {
+            await getIndexes();
+        }
+
         try {
             const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
             

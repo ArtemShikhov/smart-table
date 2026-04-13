@@ -47,10 +47,14 @@ async function render(action) {
     query = applySorting(query, state, action);
     query = applyPagination(query, state, action); // обновляем query
 
-    const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
+    try {
+        const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
 
-    updatePagination(total, query); // перерисовываем пагинатор
-    sampleTable.render(items);
+        updatePagination(total, query); // перерисовываем пагинатор
+        sampleTable.render(items);
+    } catch (e) {
+        console.error('Error rendering table:', e);
+    }
 }
 
 const sampleTable = initTable({

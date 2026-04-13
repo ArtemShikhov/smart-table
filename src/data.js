@@ -31,10 +31,16 @@ export function initData(sourceData) {
     // функция получения индексов
     const getIndexes = async () => {
         if (!sellersCache || !customersCache) {
-            [sellersCache, customersCache] = await Promise.all([
-                fetch(`${BASE_URL}/sellers`).then(res => res.json()),
-                fetch(`${BASE_URL}/customers`).then(res => res.json()),
-            ]);
+            try {
+                [sellersCache, customersCache] = await Promise.all([
+                    fetch(`${BASE_URL}/sellers`).then(res => res.json()),
+                    fetch(`${BASE_URL}/customers`).then(res => res.json()),
+                ]);
+            } catch (e) {
+                // fallback на локальные данные
+                sellersCache = sellers;
+                customersCache = customers;
+            }
         }
 
         return { sellers: sellersCache, customers: customersCache };
@@ -49,14 +55,22 @@ export function initData(sourceData) {
             return lastResult;
         }
 
-        const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
-        const records = await response.json();
+        try {
+            const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
+            const records = await response.json();
 
-        lastQuery = nextQuery;
-        lastResult = {
-            total: records.total,
-            items: mapRecords(records.items)
-        };
+            lastQuery = nextQuery;
+            lastResult = {
+                total: records.total,
+                items: mapRecords(records.items)
+            };
+        } catch (e) {
+            // fallback на локальные данные
+            lastResult = {
+                total: data.length,
+                items: data
+            };
+        }
 
         return lastResult;
     };

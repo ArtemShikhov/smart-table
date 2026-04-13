@@ -5,7 +5,7 @@ const BASE_URL = 'https://webinars.webdev.education-services.ru/sp7-api';
 export function initData(sourceData) {
     const sellers = makeIndex(sourceData.sellers, 'id', v => `${v.first_name} ${v.last_name}`);
     const customers = makeIndex(sourceData.customers, 'id', v => `${v.first_name} ${v.last_name}`);
-    const data = sourceData.purchase_records.map(item => ({
+    const localData = sourceData.purchase_records.map(item => ({
         id: item.receipt_id,
         date: item.date,
         seller: sellers[item.seller_id],
@@ -77,13 +77,14 @@ export function initData(sourceData) {
         } catch (e) {
             console.warn('Using local data fallback:', e.message);
             // fallback на локальные данные с учётом пагинации
+            // localData уже преобразована, поэтому используем её напрямую
             const limit = parseInt(query.limit) || 10;
             const page = parseInt(query.page) || 1;
             const skip = (page - 1) * limit;
 
             lastResult = {
-                total: data.length,
-                items: data.slice(skip, skip + limit)
+                total: localData.length,
+                items: localData.slice(skip, skip + limit)
             };
         }
 

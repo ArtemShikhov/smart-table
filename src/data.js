@@ -68,6 +68,7 @@ export function initData(sourceData) {
             }
             
             const records = await response.json();
+            console.log('Server response:', records.total, 'records');
 
             lastQuery = nextQuery;
             lastResult = {
@@ -82,6 +83,7 @@ export function initData(sourceData) {
             const page = parseInt(query.page) || 1;
             const skip = (page - 1) * limit;
 
+            console.log('Local data total:', localData.length, 'returning', limit, 'items from', skip);
             lastResult = {
                 total: localData.length,
                 items: localData.slice(skip, skip + limit)

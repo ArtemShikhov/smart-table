@@ -112,4 +112,5 @@ async function init() {
     await render();
 }
 
-init().catch(render);
+// Запускаем инициализацию
+init();

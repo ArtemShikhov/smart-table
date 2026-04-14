@@ -14,26 +14,20 @@ env:
   REP_TESTS: https://github.com/Yandex-Practicum/tests-smart-table.git
   REPO: ${{ github.event.repository.name }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  PROJECT_DIR: /home/runner/work/smart-table/smart-table
 jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
-    - name: Create smart-table directory
-      run: |
-        mkdir -p $PROJECT_DIR
-        cp -r $GITHUB_WORKSPACE/* $PROJECT_DIR/
-        cp $GITHUB_WORKSPACE/.gitignore $PROJECT_DIR/ 2>/dev/null || true
     - name: Use Node.js 24.x
       uses: actions/setup-node@v5
       with:
         node-version: 24.x
     - name: Install dependencies
-      run: cd $PROJECT_DIR && npm ci
+      run: npm ci
     - name: Build project
-      run: cd $PROJECT_DIR && npm run build
+      run: npm run build
     - name: Get testing lib
       run: set -eu && git clone --depth 1 $REP_TESTS $DIR_TESTS
     - name: Run tests

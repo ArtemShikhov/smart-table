@@ -20,16 +20,16 @@ jobs:
     steps:
     - name: Set up GitHub Actions
       uses: actions/checkout@v5
-      with:
-        path: smart-table
+    - name: Create symlink for test script
+      run: ln -s $GITHUB_WORKSPACE $GITHUB_WORKSPACE/../smart-table
     - name: Use Node.js 24.x
       uses: actions/setup-node@v5
       with:
         node-version: 24.x
     - name: Install dependencies
-      run: cd smart-table && npm ci
+      run: npm ci
     - name: Build project
-      run: cd smart-table && npm run build
+      run: npm run build
     - name: Get testing lib
       run: set -eu && git clone --depth 1 $REP_TESTS $DIR_TESTS
     - name: Run tests

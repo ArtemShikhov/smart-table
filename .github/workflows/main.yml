@@ -20,11 +20,8 @@ jobs:
     steps:
     - name: Set up GitHub Actions
       uses: actions/checkout@v5
-    - name: Create expected directory structure
-      run: |
-        cd $GITHUB_WORKSPACE/..
-        mkdir -p smart-table
-        cp -r $GITHUB_WORKSPACE/* smart-table/
+      with:
+        path: smart-table
     - name: Use Node.js 24.x
       uses: actions/setup-node@v5
       with:

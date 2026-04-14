@@ -18,17 +18,22 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up GitHub Actions
+    - name: Checkout code
       uses: actions/checkout@v5
-    - name: Create symlink for test script
-      run: ln -s $GITHUB_WORKSPACE $GITHUB_WORKSPACE/../smart-table
+    - name: Create smart-table directory
+      run: |
+        mkdir -p $HOME/smart-table
+        cp -r $GITHUB_WORKSPACE/* $HOME/smart-table/
+        cp $GITHUB_WORKSPACE/.gitignore $HOME/smart-table/ 2>/dev/null || true
     - name: Use Node.js 24.x
       uses: actions/setup-node@v5
       with:
         node-version: 24.x
     - name: Install dependencies
+      working-directory: $HOME/smart-table
       run: npm ci
     - name: Build project
+      working-directory: $HOME/smart-table
       run: npm run build
     - name: Get testing lib
       run: set -eu && git clone --depth 1 $REP_TESTS $DIR_TESTS

@@ -14,8 +14,8 @@ export function initData(sourceData) {
     }));
 
     // переменные для кеширования данных
-    let sellersCache;
-    let customersCache;
+    let sellersCache = sellers; // сразу инициализируем локальными данными
+    let customersCache = customers; // сразу инициализируем локальными данными
     let lastResult;
     let lastQuery;
 
@@ -30,17 +30,17 @@ export function initData(sourceData) {
 
     // функция получения индексов
     const getIndexes = async () => {
-        if (!sellersCache || !customersCache) {
-            try {
-                [sellersCache, customersCache] = await Promise.all([
-                    fetch(`${BASE_URL}/sellers`).then(res => res.json()),
-                    fetch(`${BASE_URL}/customers`).then(res => res.json()),
-                ]);
-            } catch (e) {
-                // fallback на локальные данные
-                sellersCache = sellers;
-                customersCache = customers;
-            }
+        try {
+            const [sellersRemote, customersRemote] = await Promise.all([
+                fetch(`${BASE_URL}/sellers`).then(res => res.json()),
+                fetch(`${BASE_URL}/customers`).then(res => res.json()),
+            ]);
+            // Если сервер доступен, используем его данные
+            sellersCache = sellersRemote;
+            customersCache = customersRemote;
+        } catch (e) {
+            // оставляем локальные данные
+            console.log('Using local indexes');
         }
 
         return { sellers: sellersCache, customers: customersCache };
@@ -53,11 +53,6 @@ export function initData(sourceData) {
 
         if (lastQuery === nextQuery && !isUpdated) {
             return lastResult;
-        }
-
-        // Убедимся что кэши инициализированы
-        if (!sellersCache || !customersCache) {
-            await getIndexes();
         }
 
         try {
@@ -78,7 +73,6 @@ export function initData(sourceData) {
         } catch (e) {
             console.warn('Using local data fallback:', e.message);
             // fallback на локальные данные с учётом пагинации
-            // localData уже преобразована, поэтому используем её напрямую
             const limit = parseInt(query.limit) || 10;
             const page = parseInt(query.page) || 1;
             const skip = (page - 1) * limit;

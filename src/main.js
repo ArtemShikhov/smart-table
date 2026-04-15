@@ -94,21 +94,24 @@ const applySearching = initSearching('search');
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
-async function init() {
-    // Сначала рендерим данные
-    await render();
-    
-    // Потом обновляем индексы (не блокируем рендер)
-    try {
-        const indexes = await api.getIndexes();
+// Синхронная инициализация - сразу рендерим данные
+function init() {
+    // Сначала рендерим с пустым query (использует fallback)
+    render().then(() => {
+        console.log('Initial render complete');
+    }).catch(e => {
+        console.error('Initial render failed:', e);
+    });
 
+    // Потом обновляем индексы (не блокируем рендер)
+    api.getIndexes().then(indexes => {
         updateIndexes(sampleTable.filter.elements, {
             searchBySeller: indexes.sellers
         });
-    } catch (e) {
+    }).catch(e => {
         console.error('Error initializing indexes:', e);
-    }
+    });
 }
 
-// Запускаем инициализацию
+// Запускаем инициализацию сразу
 init();

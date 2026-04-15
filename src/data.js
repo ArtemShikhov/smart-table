@@ -64,17 +64,28 @@ export function initData(externalSourceData) {
         // Применяем фильтрацию если указана
         let filteredData = [...localData];
         const filterKeys = Object.keys(query).filter(k => k.startsWith('filter['));
-        const hasTotalFrom = query.totalFrom !== undefined && query.totalFrom !== '';
-        const hasTotalTo = query.totalTo !== undefined && query.totalTo !== '';
-        const hasSearch = query.search !== undefined && query.search !== '';
         
-        if (filterKeys.length > 0 || hasTotalFrom || hasTotalTo || hasSearch) {
-            const filter = {};
-            filterKeys.forEach(key => {
-                const fieldName = key.replace('filter[', '').replace(']', '');
+        // Извлекаем totalFrom и totalTo из фильтров
+        let totalFromValue = null;
+        let totalToValue = null;
+        const filter = {};
+        
+        filterKeys.forEach(key => {
+            const fieldName = key.replace('filter[', '').replace(']', '');
+            if (fieldName === 'totalFrom') {
+                totalFromValue = query[key];
+            } else if (fieldName === 'totalTo') {
+                totalToValue = query[key];
+            } else {
                 filter[fieldName] = query[key];
-            });
-            
+            }
+        });
+        
+        const hasSearch = query.search !== undefined && query.search !== '';
+        const hasTotalFrom = totalFromValue !== null && totalFromValue !== '';
+        const hasTotalTo = totalToValue !== null && totalToValue !== '';
+        
+        if (filterKeys.length > 0 || hasSearch || hasTotalFrom || hasTotalTo) {
             const comparator = createComparison(defaultRules);
             filteredData = localData.filter(item => {
                 // Проверяем поиск
@@ -97,7 +108,7 @@ export function initData(externalSourceData) {
                 
                 // Проверяем диапазон total
                 if (hasTotalFrom) {
-                    const from = parseFloat(query.totalFrom);
+                    const from = parseFloat(totalFromValue);
                     if (!isNaN(from)) {
                         const itemTotal = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
                         if (itemTotal < from) {
@@ -106,7 +117,7 @@ export function initData(externalSourceData) {
                     }
                 }
                 if (hasTotalTo) {
-                    const to = parseFloat(query.totalTo);
+                    const to = parseFloat(totalToValue);
                     if (!isNaN(to)) {
                         const itemTotal = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
                         if (itemTotal > to) {

@@ -48,18 +48,15 @@ async function render(action) {
     query = applyPagination(query, state, action); // обновляем query
 
     try {
-        console.log('Rendering with query:', query);
         const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
-        console.log('Received items:', items?.length, 'total:', total);
 
         if (items && items.length >= 0) {
             updatePagination(total, query); // перерисовываем пагинатор
             sampleTable.render(items);
-            console.log('Table rendered with', items.length, 'items');
         }
     } catch (e) {
         console.error('Error rendering table:', e);
-        // Даже при ошибчке показываем пустую таблицу
+        // Даже при ошибке показываем пустую таблицу
         sampleTable.render([]);
     }
 }
@@ -98,6 +95,10 @@ const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
 async function init() {
+    // Сначала рендерим данные
+    await render();
+    
+    // Потом обновляем индексы (не блокируем рендер)
     try {
         const indexes = await api.getIndexes();
 
@@ -107,9 +108,6 @@ async function init() {
     } catch (e) {
         console.error('Error initializing indexes:', e);
     }
-    
-    // Всегда вызываем render после инициализации
-    await render();
 }
 
 // Запускаем инициализацию

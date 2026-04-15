@@ -1,11 +1,13 @@
 import {makeIndex} from "./lib/utils.js";
+import {data as sourceData} from "./data/dataset_1.js";
 
 const BASE_URL = 'https://webinars.webdev.education-services.ru/sp7-api';
 
-export function initData(sourceData) {
-    const sellers = makeIndex(sourceData.sellers, 'id', v => `${v.first_name} ${v.last_name}`);
-    const customers = makeIndex(sourceData.customers, 'id', v => `${v.first_name} ${v.last_name}`);
-    const localData = sourceData.purchase_records.map(item => ({
+export function initData(externalSourceData) {
+    const dataToUse = externalSourceData || sourceData;
+    const sellers = makeIndex(dataToUse.sellers, 'id', v => `${v.first_name} ${v.last_name}`);
+    const customers = makeIndex(dataToUse.customers, 'id', v => `${v.first_name} ${v.last_name}`);
+    const localData = dataToUse.purchase_records.map(item => ({
         id: item.receipt_id,
         date: item.date,
         seller: sellers[item.seller_id],
@@ -44,11 +46,6 @@ export function initData(sourceData) {
         return { sellers: sellersCache, customers: customersCache };
     }
 
-    // функция получения записей - СИНХРОННАЯ для локальных данных
-    const getRecords = (query, isUpdated = false) => {
-        return Promise.resolve(getRecordsSync(query, isUpdated));
-    };
-
     // синхронная версия
     const getRecordsSync = (query, isUpdated = false) => {
         const qs = new URLSearchParams(query);
@@ -70,19 +67,28 @@ export function initData(sourceData) {
         };
 
         // Пытаемся загрузить с сервера в фоне (не блокируем)
-        fetch(`${BASE_URL}/records?${nextQuery}`)
-            .then(res => res.ok ? res.json() : null)
-            .then(records => {
-                if (records) {
-                    lastResult = {
-                        total: records.total,
-                        items: mapRecords(records.items)
-                    };
-                }
-            })
-            .catch(() => {});
+        try {
+            fetch(`${BASE_URL}/records?${nextQuery}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(records => {
+                    if (records) {
+                        lastResult = {
+                            total: records.total,
+                            items: mapRecords(records.items)
+                        };
+                    }
+                })
+                .catch(() => {});
+        } catch (e) {
+            // fetch может не работать в некоторых окружениях
+        }
 
         return lastResult;
+    };
+
+    // функция получения записей - СИНХРОННАЯ для локальных данных
+    const getRecords = (query, isUpdated = false) => {
+        return Promise.resolve(getRecordsSync(query, isUpdated));
     };
 
     return {

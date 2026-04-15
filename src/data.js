@@ -1,5 +1,7 @@
 import {makeIndex} from "./lib/utils.js";
 import {data as sourceData} from "./data/dataset_1.js";
+import {sortCollection} from "./lib/sort.js";
+import {createComparison, defaultRules} from "./lib/compare.js";
 
 const BASE_URL = 'https://webinars.webdev.education-services.ru/sp7-api';
 
@@ -46,7 +48,7 @@ export function initData(externalSourceData) {
         return { sellers: sellersCache, customers: customersCache };
     }
 
-    // синхронная версия
+    // синхронная версия с сортировкой и фильтрацией
     const getRecordsSync = (query, isUpdated = false) => {
         const qs = new URLSearchParams(query);
         const nextQuery = qs.toString();
@@ -59,11 +61,70 @@ export function initData(externalSourceData) {
         const page = parseInt(query.page) || 1;
         const skip = (page - 1) * limit;
 
+        // Применяем фильтрацию если указана
+        let filteredData = [...localData];
+        const filterKeys = Object.keys(query).filter(k => k.startsWith('filter['));
+        const hasTotalFrom = query.totalFrom !== undefined && query.totalFrom !== '';
+        const hasTotalTo = query.totalTo !== undefined && query.totalTo !== '';
+        const hasSearch = query.search !== undefined && query.search !== '';
+        
+        if (filterKeys.length > 0 || hasTotalFrom || hasTotalTo || hasSearch) {
+            const filter = {};
+            filterKeys.forEach(key => {
+                const fieldName = key.replace('filter[', '').replace(']', '');
+                filter[fieldName] = query[key];
+            });
+            
+            const comparator = createComparison(defaultRules);
+            filteredData = localData.filter(item => {
+                // Проверяем поиск
+                if (hasSearch) {
+                    const searchTerm = query.search.toLowerCase();
+                    const matchesSearch = 
+                        item.date.toLowerCase().includes(searchTerm) ||
+                        item.seller.toLowerCase().includes(searchTerm) ||
+                        item.customer.toLowerCase().includes(searchTerm) ||
+                        String(item.total).includes(searchTerm);
+                    if (!matchesSearch) {
+                        return false;
+                    }
+                }
+                
+                // Проверяем обычные фильтры
+                if (Object.keys(filter).length > 0 && !comparator(item, filter)) {
+                    return false;
+                }
+                
+                // Проверяем диапазон total
+                if (hasTotalFrom) {
+                    const from = parseFloat(query.totalFrom);
+                    if (!isNaN(from) && item.total < from) {
+                        return false;
+                    }
+                }
+                if (hasTotalTo) {
+                    const to = parseFloat(query.totalTo);
+                    if (!isNaN(to) && item.total > to) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+
+        // Применяем сортировку если указана
+        let sortedData = [...filteredData];
+        if (query.sort) {
+            const [field, order] = query.sort.split(':');
+            sortedData = sortCollection(filteredData, field, order);
+        }
+
         // Всегда используем локальные данные для мгновенного результата
         lastQuery = nextQuery;
         lastResult = {
-            total: localData.length,
-            items: localData.slice(skip, skip + limit)
+            total: sortedData.length,
+            items: sortedData.slice(skip, skip + limit)
         };
 
         // Пытаемся загрузить с сервера в фоне (не блокируем)

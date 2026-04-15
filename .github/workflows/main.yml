@@ -28,7 +28,13 @@ jobs:
       run: npm ci
     - name: Build project
       run: npm run build
+    - name: Start dev server
+      run: npx vite preview --port 5173 &
+    - name: Wait for server
+      run: sleep 5
     - name: Get testing lib
       run: set -eu && git clone --depth 1 $REP_TESTS $DIR_TESTS
     - name: Run tests
       run: bash $DIR_TESTS/bin/run.sh
+      env:
+        CI: true

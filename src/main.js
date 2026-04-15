@@ -47,21 +47,13 @@ function render(action) {
     query = applySorting(query, state, action);
     query = applyPagination(query, state, action); // обновляем query
 
-    // Синхронный вызов getRecords - теперь он возвращает данные сразу
-    const result = api.getRecords(query);
+    // Получаем данные синхронно
+    const { total, items } = api.getRecordsSync(query);
     
-    // Обрабатываем Promise
-    result.then(({ total, items }) => {
-        if (items && items.length >= 0) {
-            updatePagination(total, query); // перерисовываем пагинатор
-            sampleTable.render(items);
-        }
-    }).catch(e => {
-        console.error('Error rendering table:', e);
-        sampleTable.render([]);
-    });
-    
-    return result;
+    if (items && items.length >= 0) {
+        updatePagination(total, query); // перерисовываем пагинатор
+        sampleTable.render(items);
+    }
 }
 
 const sampleTable = initTable({
@@ -97,20 +89,14 @@ const applySearching = initSearching('search');
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
-// Синхронная инициализация
-function init() {
-    // Рендерим данные
-    render();
+// Инициализация - рендерим сразу
+render();
 
-    // Обновляем индексы асинхронно
-    api.getIndexes().then(indexes => {
-        updateIndexes(sampleTable.filter.elements, {
-            searchBySeller: indexes.sellers
-        });
-    }).catch(e => {
-        console.error('Error initializing indexes:', e);
+// Обновляем индексы асинхронно
+api.getIndexes().then(indexes => {
+    updateIndexes(sampleTable.filter.elements, {
+        searchBySeller: indexes.sellers
     });
-}
-
-// Запускаем инициализацию сразу
-init();
+}).catch(e => {
+    console.error('Error initializing indexes:', e);
+});

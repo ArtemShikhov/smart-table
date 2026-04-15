@@ -46,11 +46,16 @@ export function initData(sourceData) {
 
     // функция получения записей - СИНХРОННАЯ для локальных данных
     const getRecords = (query, isUpdated = false) => {
+        return Promise.resolve(getRecordsSync(query, isUpdated));
+    };
+
+    // синхронная версия
+    const getRecordsSync = (query, isUpdated = false) => {
         const qs = new URLSearchParams(query);
         const nextQuery = qs.toString();
 
         if (lastQuery === nextQuery && !isUpdated) {
-            return Promise.resolve(lastResult);
+            return lastResult;
         }
 
         const limit = parseInt(query.limit) || 10;
@@ -77,11 +82,12 @@ export function initData(sourceData) {
             })
             .catch(() => {});
 
-        return Promise.resolve(lastResult);
+        return lastResult;
     };
 
     return {
         getIndexes,
-        getRecords
+        getRecords,
+        getRecordsSync
     }
 }

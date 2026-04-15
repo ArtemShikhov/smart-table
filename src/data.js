@@ -98,14 +98,20 @@ export function initData(externalSourceData) {
                 // Проверяем диапазон total
                 if (hasTotalFrom) {
                     const from = parseFloat(query.totalFrom);
-                    if (!isNaN(from) && item.total < from) {
-                        return false;
+                    if (!isNaN(from)) {
+                        const itemTotal = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+                        if (itemTotal < from) {
+                            return false;
+                        }
                     }
                 }
                 if (hasTotalTo) {
                     const to = parseFloat(query.totalTo);
-                    if (!isNaN(to) && item.total > to) {
-                        return false;
+                    if (!isNaN(to)) {
+                        const itemTotal = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+                        if (itemTotal > to) {
+                            return false;
+                        }
                     }
                 }
                 

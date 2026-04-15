@@ -45,12 +45,12 @@ export function initData(sourceData) {
     }
 
     // функция получения записей - СИНХРОННАЯ для локальных данных
-    const getRecords = async (query, isUpdated = false) => {
+    const getRecords = (query, isUpdated = false) => {
         const qs = new URLSearchParams(query);
         const nextQuery = qs.toString();
 
         if (lastQuery === nextQuery && !isUpdated) {
-            return lastResult;
+            return Promise.resolve(lastResult);
         }
 
         const limit = parseInt(query.limit) || 10;
@@ -77,7 +77,7 @@ export function initData(sourceData) {
             })
             .catch(() => {});
 
-        return lastResult;
+        return Promise.resolve(lastResult);
     };
 
     return {

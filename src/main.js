@@ -38,7 +38,7 @@ function collectState() {
  * Перерисовка состояния таблицы при любых изменениях
  * @param {HTMLButtonElement?} action
  */
-async function render(action) {
+function render(action) {
     let state = collectState(); // состояние полей из таблицы
     let query = {}; // здесь будут формироваться параметры запроса
     // @todo: использование
@@ -47,18 +47,21 @@ async function render(action) {
     query = applySorting(query, state, action);
     query = applyPagination(query, state, action); // обновляем query
 
-    try {
-        const { total, items } = await api.getRecords(query); // запрашиваем данные с собранными параметрами
-
+    // Синхронный вызов getRecords - теперь он возвращает данные сразу
+    const result = api.getRecords(query);
+    
+    // Обрабатываем Promise
+    result.then(({ total, items }) => {
         if (items && items.length >= 0) {
             updatePagination(total, query); // перерисовываем пагинатор
             sampleTable.render(items);
         }
-    } catch (e) {
+    }).catch(e => {
         console.error('Error rendering table:', e);
-        // Даже при ошибке показываем пустую таблицу
         sampleTable.render([]);
-    }
+    });
+    
+    return result;
 }
 
 const sampleTable = initTable({
@@ -94,16 +97,12 @@ const applySearching = initSearching('search');
 const appRoot = document.querySelector('#app');
 appRoot.appendChild(sampleTable.container);
 
-// Синхронная инициализация - сразу рендерим данные
+// Синхронная инициализация
 function init() {
-    // Сначала рендерим с пустым query (использует fallback)
-    render().then(() => {
-        console.log('Initial render complete');
-    }).catch(e => {
-        console.error('Initial render failed:', e);
-    });
+    // Рендерим данные
+    render();
 
-    // Потом обновляем индексы (не блокируем рендер)
+    // Обновляем индексы асинхронно
     api.getIndexes().then(indexes => {
         updateIndexes(sampleTable.filter.elements, {
             searchBySeller: indexes.sellers
